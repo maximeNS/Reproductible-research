@@ -1,0 +1,77 @@
+---
+title: "Reproductible research"
+author: "Nguyen"
+date: "18 mai 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#loading data
+dat<-read.csv("D:/activity.csv",header=TRUE)
+head(dat)
+
+
+#histogram of nbr steps/ days
+Sums<-with(dat,tapply(steps,date,sum,na.rm=TRUE))
+Sums
+hist(Sums,xlab="number of steps")
+
+#mean and median of total number of steps/ day
+mean(Sums,na.rm=TRUE)
+median(Sums,na.rm=TRUE)
+
+#xyplot for steps vs. interval
+dat$steps<-as.numeric(dat$steps)
+dat$interval<-as.factor(dat$interval)
+int<-with(dat,tapply(steps,interval,sum,na.rm=TRUE))
+int
+plot(int,xlab="steps",ylab="interval")
+#interval with max steps
+dat$interval[int==max(int)]
+
+#number of mising value 
+comp<-complete.cases(dat$steps)
+length(dat$steps[comp==FALSE])       
+library(caret)
+
+#filling missing value
+dat$Mean<-with(dat,tapply(steps,date,mean,na.rm=TRUE))
+dat$comp<-complete.cases(dat$steps)
+head(dat)
+for (i in  1:17568) {
+data<-dat[i,]
+if (data$comp==TRUE){dat$fill<-data$steps
+} else {dat$fill<-dat$Mean
+}
+}
+head(dat)
+
+#calculating sum of step / day with imputed data
+Sums2<-with(dat,tapply(fill,date,sum,na.rm=TRUE))
+Sums2
+#histogram
+hist(Sums2,xlab="number of steps")
+#mean and median number of step / day
+mean(Sums2)
+median(Sums2)
+
+#creating vector
+dat$date<-as.POSIXct.Date(dat$date)
+
+dat$day<-weekdays(dat$date)
+dat$sem<-ifelse(dat$day=="samedi"|dat$day=="dimanche",0,1)
+
+#pannel plot
+library(ggplot2)
+dat$interval<-as.numeric(dat$interval)
+g<-ggplot(dat,aes(y=steps,x=interval))
+g<-g+geom_point()
+g+facet_grid(~sem)
+```
+
+
